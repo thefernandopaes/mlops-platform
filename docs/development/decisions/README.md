@@ -1,0 +1,64 @@
+# Architecture Decision Records (ADRs)
+
+This folder contains the Architecture Decision Records for the MLOps Platform project.
+
+## What are ADRs?
+
+ADRs are documents that capture important architectural decisions made during project development. They help to:
+
+- Record the context and reasoning behind decisions
+- Facilitate communication between team members
+- Help new developers understand the choices made
+- Serve as historical reference
+
+## Naming Conventions
+
+Use the format: `XXX-decision-title.md`
+
+Examples:
+- `001-frontend-framework-choice.md`
+- `002-database-architecture.md`
+- `003-authentication-strategy.md`
+
+## Template
+
+Copy and use this template for new ADRs:
+
+```markdown
+# ADR-XXX: [Decision Title]
+
+**Date:** [YYYY-MM-DD]
+**Status:** [Proposed | Accepted | Rejected | Deprecated | Superseded by ADR-XXX]
+
+## Context
+
+Describe the context and problem that led to the need for this decision.
+
+## Decision
+
+Describe the decision made clearly and concisely.
+
+## Consequences
+
+### Positive
+- List of positive consequences
+
+### Negative
+- List of negative consequences or trade-offs
+
+## Alternatives Considered
+
+1. **Alternative 1**
+   - Pros: ...
+   - Cons: ...
+
+2. **Alternative 2**
+   - Pros: ...
+   - Cons: ...
+
+## References
+
+- Links to relevant documentation
+- Discussions that led to the decision
+- Benchmarks or studies that influenced the decision
+```
