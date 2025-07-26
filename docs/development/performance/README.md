@@ -2,6 +2,11 @@
 
 This folder contains documentation related to performance and optimizations of the MLOps Platform.
 
+## Current Documentation
+
+### 📊 Implemented Optimizations
+- **[Database Optimizations](./database-optimizations.md)** - Strategic indexing and query optimization for the database schema
+
 ## Types of Documentation
 
 ### 📊 Benchmarks
