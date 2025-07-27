@@ -7,6 +7,9 @@ This folder contains the Architecture Decision Records for the MLOps Platform pr
 1. **[ADR-001: Project Structure and Technology Stack](./001-project-structure.md)** - Established monorepo structure and technology choices
 2. **[ADR-002: API Design and Routing Strategy](./002-api-design.md)** - RESTful API design patterns and domain organization  
 3. **[ADR-003: Database Schema Design and Implementation](./003-database-schema-design.md)** - Comprehensive database schema with multi-tenancy and performance optimizations
+4. **[ADR-004: Authentication and Authorization Strategy](./004-authentication-authorization-strategy.md)** - JWT-based authentication with RBAC and multi-tenant support
+5. **[ADR-005: Frontend State Management and UI Architecture](./005-frontend-state-management-ui-architecture.md)** - React Context, component architecture, and form handling patterns
+6. **[ADR-006: API Client and Error Handling Strategy](./006-api-client-error-handling-strategy.md)** - Axios-based HTTP client with automatic token refresh and centralized error handling
 
 ## What are ADRs?
 
