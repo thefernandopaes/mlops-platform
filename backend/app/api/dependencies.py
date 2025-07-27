@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import verify_token
 from app.models.user import User
+from app.models.organization_membership import OrganizationMembership
 from typing import Optional
+import uuid
 
 security = HTTPBearer()
 
@@ -49,11 +51,67 @@ def require_organization_access(organization_id: str):
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db)
     ):
+        # Convert string to UUID if needed
+        try:
+            org_uuid = uuid.UUID(organization_id) if isinstance(organization_id, str) else organization_id
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid organization ID format"
+            )
+        
         # Check if user belongs to the organization
-        if current_user.organization_id != organization_id:
+        membership = db.query(OrganizationMembership).filter(
+            OrganizationMembership.user_id == current_user.id,
+            OrganizationMembership.organization_id == org_uuid
+        ).first()
+        
+        if not membership:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this organization"
             )
+        
         return current_user
     return _check_access
+
+def require_organization_role(organization_id: str, required_role: str = "viewer"):
+    """Dependency to ensure user has specific role in organization."""
+    async def _check_role(
+        current_user: User = Depends(get_current_active_user),
+        db: Session = Depends(get_db)
+    ):
+        # Convert string to UUID if needed
+        try:
+            org_uuid = uuid.UUID(organization_id) if isinstance(organization_id, str) else organization_id
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid organization ID format"
+            )
+        
+        # Check if user has required role in the organization
+        membership = db.query(OrganizationMembership).filter(
+            OrganizationMembership.user_id == current_user.id,
+            OrganizationMembership.organization_id == org_uuid
+        ).first()
+        
+        if not membership:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this organization"
+            )
+        
+        # Role hierarchy: admin > developer > viewer
+        role_hierarchy = {"admin": 3, "developer": 2, "viewer": 1}
+        user_role_level = role_hierarchy.get(membership.role, 0)
+        required_role_level = role_hierarchy.get(required_role, 0)
+        
+        if user_role_level < required_role_level:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required role: {required_role}"
+            )
+        
+        return current_user
+    return _check_role
