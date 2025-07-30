@@ -6,3 +6,15 @@ channel = "stable-25_05"
 
 [deployment]
 run = ["sh", "-c", "npm run build"]
+
+[workflows]
+runButton = "Frontend Dev Server"
+
+[[workflows.workflow]]
+name = "Frontend Dev Server"
+author = 43359296
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm install && npm run dev"
