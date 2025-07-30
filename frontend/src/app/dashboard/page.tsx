@@ -13,11 +13,31 @@ import {
   User,
   Users,
   Activity,
-  TrendingUp
+  TrendingUp,
+  Building2,
+  ChevronDown
 } from 'lucide-react';
+import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 
 function DashboardContent() {
   const { user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -40,23 +60,65 @@ function DashboardContent() {
               <div className="flex items-center space-x-2 text-sm text-gray-700">
                 <User className="h-4 w-4" />
                 <span>{user?.firstName} {user?.lastName}</span>
-                {user?.organization && (
+                {user?.organizationName && (
                   <>
                     <span className="text-gray-400">•</span>
-                    <span className="text-gray-600">{user.organization.name}</span>
+                    <span className="text-gray-600">{user.organizationName}</span>
                   </>
                 )}
               </div>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              {/* User Menu Dropdown */}
+              <div className="relative" ref={menuRef}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      {user?.organizationId && (
+                        <Link
+                          href="/organization/settings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Organization Settings
+                        </Link>
+                      )}
+                      {!user?.organizationId && (
+                        <Link
+                          href="/organization/create"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Create Organization
+                        </Link>
+                      )}
+                      <hr className="my-1" />
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          handleLogout();
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -151,10 +213,21 @@ function DashboardContent() {
                 <BarChart3 className="mr-2 h-4 w-4" />
                 Start Experiment
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Invite Team Members
-              </Button>
+              {user?.organizationId ? (
+                <Link href="/organization/settings" className="w-full">
+                  <Button className="w-full justify-start" variant="outline">
+                    <Users className="mr-2 h-4 w-4" />
+                    Manage Team Members
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/organization/create" className="w-full">
+                  <Button className="w-full justify-start" variant="outline">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Create Organization
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
 

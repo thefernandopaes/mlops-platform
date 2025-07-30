@@ -132,6 +132,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userRoleLevel >= requiredRoleLevel;
   }, [user]);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      if (authService.isAuthenticated()) {
+        const userProfile = await authService.getCurrentUser();
+        const authUser = authService.transformUserProfile(userProfile);
+        setUser(authUser);
+      }
+    } catch (error) {
+      console.warn('Failed to refresh user:', error);
+      // Don't clear tokens on refresh failure, just log the error
+    }
+  }, []);
+
   const value: AuthContextType = {
     // State
     user,
@@ -143,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshToken,
+    refreshUser,
     
     // Utilities
     hasRole,

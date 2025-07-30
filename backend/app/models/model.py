@@ -15,7 +15,7 @@ class Model(Base):
     framework = Column(String(100), nullable=False)  # scikit-learn, tensorflow, pytorch, xgboost
     task_type = Column(String(100), nullable=True)  # binary_classification, multiclass, regression, text_generation
     tags = Column(ARRAY(Text), default=list, nullable=False)
-    metadata = Column(JSONB, default=dict, nullable=False)
+    model_metadata = Column(JSONB, default=dict, nullable=False)
     
     # Multi-tenant
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)

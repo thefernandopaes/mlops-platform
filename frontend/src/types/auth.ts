@@ -89,6 +89,7 @@ export interface AuthContextType {
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   
   // Utilities
   hasRole: (role: 'admin' | 'developer' | 'viewer') => boolean;
