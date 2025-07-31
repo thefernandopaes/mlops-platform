@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -159,7 +158,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="p-2 border-t border-gray-200 space-y-1">
         {bottomItems.map((item) => {
           if (item.requiresPro && !user?.organizationId) return null;
-          
+
           const Icon = item.icon;
           return (
             <Link key={item.href} href={item.href}>

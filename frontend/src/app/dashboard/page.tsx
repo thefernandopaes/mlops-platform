@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -152,7 +151,7 @@ function DashboardContent() {
           <p className="text-gray-600 mb-4">
             Here's an overview of your ML projects and recent activity.
           </p>
-          
+
           {/* Quick Setup Checklist for new users */}
           {(!user?.organizationId || metrics.totalModels.value === 0) && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
