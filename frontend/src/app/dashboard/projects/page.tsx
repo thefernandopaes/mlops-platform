@@ -41,9 +41,7 @@ function ProjectsContent() {
 
   const primaryAction = {
     label: 'Create Project',
-    onClick: () => {
-      console.log('Create project clicked');
-    }
+    href: '/dashboard/projects/new'
   };
 
   // Mock data for projects
@@ -219,10 +217,12 @@ function ProjectsContent() {
           </div>
           
           <div className="flex items-center space-x-3">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Project
-            </Button>
+            <Link href="/dashboard/projects/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Project
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -398,14 +398,18 @@ function ProjectsContent() {
                   {/* Quick Actions */}
                   <div className="flex items-center justify-between pt-3 border-t">
                     <div className="flex space-x-1">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
+                      <Link href={`/dashboard/projects/${project.id}`}>
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                      </Link>
+                      <Link href={`/dashboard/projects/${project.id}/edit`}>
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      </Link>
                     </div>
                     <div className="flex space-x-1">
                       {project.status !== 'archived' && (
@@ -438,10 +442,12 @@ function ProjectsContent() {
               }
             </p>
             {!searchQuery && filterStatus === 'all' && (
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Project
-              </Button>
+              <Link href="/dashboard/projects/new">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Project
+                </Button>
+              </Link>
             )}
           </div>
         )}
