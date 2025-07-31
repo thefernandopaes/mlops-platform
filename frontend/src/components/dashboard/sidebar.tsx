@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  Server,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
