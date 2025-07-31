@@ -1,9 +1,21 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { User } from '@/types/auth';
+
+// Temporary auth service for development
+const authService = {
+  getUser: () => null,
+  getCurrentUser: async () => null,
+  isAuthenticated: () => false,
+  login: async (credentials: any) => ({ user: null, token: null }),
+  register: async (data: any) => ({ user: null, token: null }),
+  logout: async () => {},
+};
+
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { authService } from '@/lib/auth-service';
+// import { authService } from '@/lib/auth-service'; //Commented out to use temporary auth service
 import { AuthUser, AuthContextType, AuthenticationError } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,10 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const authResponse = await authService.login(email, password);
       const authUser = authService.transformUserProfile(authResponse.user);
-      
+
       setUser(authUser);
       toast.success(`Welcome back, ${authUser.firstName}!`);
-      
+
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {
@@ -67,10 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const authResponse = await authService.register(data);
       const authUser = authService.transformUserProfile(authResponse.user);
-      
+
       setUser(authUser);
       toast.success(`Welcome to MLOps Platform, ${authUser.firstName}!`);
-      
+
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {
@@ -124,11 +136,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasMinimumRole = useCallback((role: 'admin' | 'developer' | 'viewer'): boolean => {
     if (!user) return false;
-    
+
     const roleHierarchy = { viewer: 1, developer: 2, admin: 3 };
     const userRoleLevel = roleHierarchy[user.role];
     const requiredRoleLevel = roleHierarchy[role];
-    
+
     return userRoleLevel >= requiredRoleLevel;
   }, [user]);
 
@@ -150,14 +162,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isAuthenticated: !!user,
     isLoading,
-    
+
     // Actions
     login,
     register,
     logout,
     refreshToken,
     refreshUser,
-    
+
     // Utilities
     hasRole,
     hasMinimumRole,
