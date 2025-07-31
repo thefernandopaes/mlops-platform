@@ -59,3 +59,77 @@ export interface DeploymentStats {
   warningCount: number;
   criticalCount: number;
 }
+
+export interface DeploymentMetrics {
+  requestRate: number;
+  errorRate: number;
+  avgLatency: number;
+  p95Latency: number;
+  p99Latency: number;
+  throughput: number;
+  concurrentUsers: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  gpuUsage?: number;
+  diskUsage: number;
+  networkIn: number;
+  networkOut: number;
+}
+
+export interface DeploymentLog {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'warn' | 'error' | 'debug';
+  source: string;
+  message: string;
+  metadata?: Record<string, any>;
+}
+
+export interface DeploymentAlert {
+  id: string;
+  type: 'performance' | 'error' | 'resource' | 'security';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  timestamp: string;
+  status: 'active' | 'acknowledged' | 'resolved';
+  acknowledgedBy?: string;
+  resolvedBy?: string;
+}
+
+export interface DeploymentHistory {
+  id: string;
+  action: 'deploy' | 'update' | 'scale' | 'restart' | 'terminate' | 'rollback';
+  description: string;
+  timestamp: string;
+  performedBy: string;
+  status: 'success' | 'failed' | 'in_progress';
+  details?: Record<string, any>;
+}
+
+export interface DeploymentConfiguration {
+  environmentVariables: Record<string, string>;
+  scalingPolicy: {
+    minInstances: number;
+    maxInstances: number;
+    targetCpuUtilization: number;
+    targetMemoryUtilization: number;
+    autoScaling: boolean;
+  };
+  healthCheck: {
+    path: string;
+    interval: number;
+    timeout: number;
+    retries: number;
+  };
+  networking: {
+    port: number;
+    protocol: string;
+    allowedOrigins?: string[];
+  };
+  resources: {
+    cpu: string;
+    memory: string;
+    gpu?: string;
+  };
+}
