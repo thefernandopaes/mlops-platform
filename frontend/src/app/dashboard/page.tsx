@@ -2,130 +2,39 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { DashboardLayout } from '@/components/dashboard/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart3, 
   Database, 
   GitBranch, 
-  LogOut, 
-  Settings, 
-  User,
   Users,
   Activity,
   TrendingUp,
   Building2,
-  ChevronDown
+  Rocket
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
 
 function DashboardContent() {
-  const { user, logout } = useAuth();
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false);
-      }
-    };
+  const breadcrumbs = [
+    { label: 'Dashboard' }
+  ];
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleLogout = async () => {
-    await logout();
+  const primaryAction = {
+    label: 'Deploy Model',
+    onClick: () => {
+      // Navigate to deployment creation
+      console.log('Deploy model clicked');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-sm">ML</span>
-              </div>
-              <h1 className="text-xl font-semibold text-gray-900">MLOps Platform</h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-700">
-                <User className="h-4 w-4" />
-                <span>{user?.firstName} {user?.lastName}</span>
-                {user?.organizationName && (
-                  <>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600">{user.organizationName}</span>
-                  </>
-                )}
-              </div>
-              
-              {/* User Menu Dropdown */}
-              <div className="relative" ref={menuRef}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                </Button>
-                
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                    <div className="py-1">
-                      {user?.organizationId && (
-                        <Link
-                          href="/organization/settings"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Building2 className="h-4 w-4 mr-2" />
-                          Organization Settings
-                        </Link>
-                      )}
-                      {!user?.organizationId && (
-                        <Link
-                          href="/organization/create"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Building2 className="h-4 w-4 mr-2" />
-                          Create Organization
-                        </Link>
-                      )}
-                      <hr className="my-1" />
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          handleLogout();
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardLayout breadcrumbs={breadcrumbs} primaryAction={primaryAction}>
+      <div className="p-6">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -315,8 +224,8 @@ function DashboardContent() {
             </div>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
