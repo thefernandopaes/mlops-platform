@@ -42,8 +42,8 @@ const navigationItems = [
 
 const bottomItems = [
   { href: '/dashboard/team', icon: Users, label: 'Team', description: 'Team management', requiresPro: true },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings', description: 'Account settings' },
   { href: '/dashboard/billing', icon: CreditCard, label: 'Billing', description: 'Subscription & billing' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings', description: 'Account settings' },
 ];
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
