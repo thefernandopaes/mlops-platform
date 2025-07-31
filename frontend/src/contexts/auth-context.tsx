@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import authService from '@/lib/auth-service';
+import { authService } from '@/lib/auth-service';
 import { AuthUser, AuthContextType, AuthenticationError } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
