@@ -69,6 +69,9 @@ export function OrganizationSettingsView({ organizationId }: SettingsViewProps) 
   const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(organizationId || null);
   const [organization, setOrganization] = useState<OrganizationWithStats | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [memberQuery, setMemberQuery] = useState('');
+  const [memberSort, setMemberSort] = useState<'name_asc' | 'name_desc' | 'role_asc' | 'role_desc'>('name_asc');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -111,9 +114,23 @@ export function OrganizationSettingsView({ organizationId }: SettingsViewProps) 
 
   // Resolve org id from user if not provided
   useEffect(() => {
-    if (!resolvedOrgId && user?.organizationId) {
-      setResolvedOrgId(user.organizationId);
-    }
+    const resolveOrg = async () => {
+      if (resolvedOrgId) return;
+      if (user?.organizationId) {
+        setResolvedOrgId(user.organizationId);
+        return;
+      }
+      // Fallback: pick first organization from list if available
+      try {
+        const list = await organizationService.listOrganizations(0, 1);
+        if (list.organizations && list.organizations.length > 0) {
+          setResolvedOrgId(list.organizations[0].id);
+        }
+      } catch (e) {
+        // ignore; will render empty state later
+      }
+    };
+    resolveOrg();
   }, [user?.organizationId, resolvedOrgId]);
 
   // Load organization data
@@ -123,16 +140,15 @@ export function OrganizationSettingsView({ organizationId }: SettingsViewProps) 
 
       try {
         setLoading(true);
-        const [orgData, membersData] = await Promise.all([
-          organizationService.getOrganization(resolvedOrgId),
-          organizationService.listMembers(
-            resolvedOrgId,
-            (memberPage - 1) * memberPageSize,
-            memberPageSize
-          ),
-        ]);
-
+        const orgData = await organizationService.getOrganization(resolvedOrgId);
         setOrganization(orgData);
+
+        setMembersLoading(true);
+        const membersData = await organizationService.listMembers(
+          resolvedOrgId,
+          (memberPage - 1) * memberPageSize,
+          memberPageSize
+        );
         setMembers(membersData.members);
         setMemberTotal(membersData.total);
 
@@ -146,6 +162,7 @@ export function OrganizationSettingsView({ organizationId }: SettingsViewProps) 
         toast.error('Failed to load organization data');
       } finally {
         setLoading(false);
+        setMembersLoading(false);
       }
     };
 
@@ -483,8 +500,70 @@ export function OrganizationSettingsView({ organizationId }: SettingsViewProps) 
                 )}
 
                 {/* Members List */}
+                {/* Members Toolbar */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Search members by name or email"
+                      value={memberQuery}
+                      onChange={(e) => {
+                        setMemberQuery(e.target.value);
+                        setMemberPage(1);
+                      }}
+                    />
+                  </div>
+                  <div className="ml-4">
+                    <select
+                      value={memberSort}
+                      onChange={(e) => setMemberSort(e.target.value as any)}
+                      className="px-3 py-2 border rounded-md text-sm"
+                    >
+                      <option value="name_asc">Name A→Z</option>
+                      <option value="name_desc">Name Z→A</option>
+                      <option value="role_asc">Role A→Z</option>
+                      <option value="role_desc">Role Z→A</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Members List */}
                 <div className="space-y-4">
-                  {members.map((member) => (
+                  {membersLoading && (
+                    <div className="flex items-center justify-center p-6">
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <span className="text-sm text-gray-600">Loading members...</span>
+                    </div>
+                  )}
+                  {!membersLoading && members.length === 0 && (
+                    <div className="p-6 border rounded-lg bg-gray-50 flex items-center">
+                      <AlertTriangle className="h-5 w-5 text-gray-400 mr-2" />
+                      <span className="text-sm text-gray-600">No members found.</span>
+                    </div>
+                  )}
+                  {(!membersLoading ? members : []).
+                    filter(m => {
+                      const q = memberQuery.trim().toLowerCase();
+                      if (!q) return true;
+                      return (
+                        m.user.full_name.toLowerCase().includes(q) ||
+                        m.user.email.toLowerCase().includes(q)
+                      );
+                    }).
+                    sort((a, b) => {
+                      switch (memberSort) {
+                        case 'name_asc':
+                          return a.user.full_name.localeCompare(b.user.full_name);
+                        case 'name_desc':
+                          return b.user.full_name.localeCompare(a.user.full_name);
+                        case 'role_asc':
+                          return a.role.localeCompare(b.role);
+                        case 'role_desc':
+                          return b.role.localeCompare(a.role);
+                        default:
+                          return 0;
+                      }
+                    }).
+                    map((member) => (
                     <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
