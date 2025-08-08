@@ -140,7 +140,7 @@ export function Header({ breadcrumbs = [], primaryAction }: HeaderProps) {
                       <Building2 className="w-6 h-6 text-gray-400" />
                       <div>
                         <div className="font-medium text-gray-900">{user.organizationName}</div>
-                        <div className="text-sm text-gray-500">{user.organizationRole}</div>
+                        <div className="text-sm text-gray-500">{user.role}</div>
                       </div>
                     </div>
                   </div>

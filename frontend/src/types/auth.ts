@@ -30,23 +30,16 @@ export interface UserProfile {
   first_name: string;
   last_name: string;
   is_active: boolean;
-  last_login: string | null;
+  is_verified: boolean;
+  avatar_url?: string | null;
+  last_login_at: string | null;
   created_at: string;
-  updated_at: string;
-  organization: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-  organization_membership: {
-    role: 'admin' | 'developer' | 'viewer';
-    joined_at: string;
-  };
+  // Short-term: backend /auth/me returns only user core data
 }
 
 export interface AuthResponse {
   user: UserProfile;
-  tokens: AuthTokens;
+  token: AuthTokens; // backend returns singular "token"
 }
 
 // Frontend-specific auth types
@@ -57,10 +50,10 @@ export interface AuthUser {
   lastName: string;
   fullName: string;
   isActive: boolean;
-  organizationId: string;
-  organizationName: string;
-  organizationSlug: string;
-  role: 'admin' | 'developer' | 'viewer';
+  organizationId: string; // optional until backend enriches /auth/me
+  organizationName: string; // optional
+  organizationSlug: string; // optional
+  role: 'admin' | 'developer' | 'viewer'; // default viewer if unknown
   lastLogin: string | null;
   createdAt: string;
 }

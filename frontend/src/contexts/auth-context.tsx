@@ -1,21 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { User } from '@/types/auth';
-
-// Temporary auth service for development
-const authService = {
-  getUser: () => null,
-  getCurrentUser: async () => null,
-  isAuthenticated: () => false,
-  login: async (credentials: any) => ({ user: null, token: null }),
-  register: async (data: any) => ({ user: null, token: null }),
-  logout: async () => {},
-};
-
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-// import { authService } from '@/lib/auth-service'; //Commented out to use temporary auth service
+import { authService } from '@/lib/auth-service';
 import { AuthUser, AuthContextType, AuthenticationError } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
