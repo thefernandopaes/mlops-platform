@@ -23,10 +23,13 @@ import {
   Trash2,
   AlertCircle
 } from 'lucide-react';
-import { ProjectFormData } from '@/types/project';
+import { ProjectFormData, CreateProjectRequest } from '@/types/project';
+import projectService from '@/lib/project-service';
+import { useAuth } from '@/contexts/auth-context';
 
 function CreateProjectContent() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
@@ -160,8 +163,27 @@ function CreateProjectContent() {
   const handleCreateProject = async () => {
     setLoading(true);
     try {
-      // TODO: Implement create project API call
-      console.log('Creating project:', formData);
+      if (!user?.organizationId) throw new Error('No organization');
+      const request: CreateProjectRequest = {
+        name: formData.name,
+        description: formData.description || undefined,
+        visibility: formData.visibility,
+        tags: formData.tags,
+        settings: {
+          defaultEnvironment: formData.defaultEnvironment,
+          experimentRetention: formData.experimentRetention,
+          notifications: formData.notifications,
+          integrations: {
+            gitRepository: formData.gitRepository || undefined,
+            slackChannel: formData.slackChannel || undefined,
+          },
+          advanced: {
+            resourceLimits: formData.resourceLimits,
+            customDomain: formData.customDomain || undefined,
+          },
+        },
+      };
+      await projectService.create({ organizationId: user.organizationId, request });
       router.push('/dashboard/projects');
     } catch (error) {
       console.error('Error creating project:', error);

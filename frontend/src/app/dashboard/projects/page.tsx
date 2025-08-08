@@ -1,13 +1,15 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import projectService from '@/lib/project-service';
+import { useAuth } from '@/contexts/auth-context';
 import { 
   Search, 
   Plus, 
@@ -30,9 +32,15 @@ import {
 import Link from 'next/link';
 
 function ProjectsContent() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(12);
+  const [total, setTotal] = useState(0);
+  const [items, setItems] = useState<any[]>([]);
 
   const breadcrumbs = [
     { label: 'Dashboard', href: '/dashboard' },
@@ -44,117 +52,38 @@ function ProjectsContent() {
     href: '/dashboard/projects/new'
   };
 
-  // Mock data for projects
-  const projects = [
-    {
-      id: 1,
-      name: 'Fraud Detection',
-      description: 'Credit card fraud detection using machine learning algorithms',
+  useEffect(() => {
+    const run = async () => {
+      if (!user?.organizationId) return;
+      setLoading(true);
+      try {
+        const res = await projectService.list(user.organizationId, (page - 1) * pageSize, pageSize);
+        setItems(res.projects);
+        setTotal(res.total);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, [user?.organizationId, page, pageSize]);
+
+  const projects = useMemo(() => {
+    // Adapt backend shape to UI fields used (keeping legacy fields in UI for now)
+    return items.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description || '',
       status: 'active',
-      memberCount: 5,
-      members: [
-        { id: 1, name: 'John Doe', avatar: 'JD' },
-        { id: 2, name: 'Sarah Chen', avatar: 'SC' },
-        { id: 3, name: 'Mike Johnson', avatar: 'MJ' },
-        { id: 4, name: 'Emily Davis', avatar: 'ED' },
-        { id: 5, name: 'Alex Kim', avatar: 'AK' },
-      ],
-      modelCount: 8,
-      experimentCount: 25,
-      deploymentCount: 3,
-      lastActivity: '2 hours ago',
-      createdAt: '2024-01-15',
-      isPersonal: false
-    },
-    {
-      id: 2,
-      name: 'Recommendation Engine',
-      description: 'Product recommendation system for e-commerce platform',
-      status: 'active',
-      memberCount: 3,
-      members: [
-        { id: 1, name: 'Sarah Chen', avatar: 'SC' },
-        { id: 2, name: 'Mike Johnson', avatar: 'MJ' },
-        { id: 3, name: 'Lisa Wang', avatar: 'LW' },
-      ],
-      modelCount: 12,
-      experimentCount: 42,
-      deploymentCount: 5,
-      lastActivity: '1 day ago',
-      createdAt: '2024-01-10',
-      isPersonal: false
-    },
-    {
-      id: 3,
-      name: 'Customer Segmentation',
-      description: 'Customer behavior analysis and segmentation models',
-      status: 'inactive',
-      memberCount: 2,
-      members: [
-        { id: 1, name: 'Emily Davis', avatar: 'ED' },
-        { id: 2, name: 'Tom Wilson', avatar: 'TW' },
-      ],
-      modelCount: 4,
-      experimentCount: 15,
-      deploymentCount: 1,
-      lastActivity: '1 week ago',
-      createdAt: '2024-01-05',
-      isPersonal: false
-    },
-    {
-      id: 4,
-      name: 'Image Classification',
-      description: 'Computer vision models for automated image tagging',
-      status: 'active',
-      memberCount: 1,
-      members: [
-        { id: 1, name: 'Alex Kim', avatar: 'AK' },
-      ],
-      modelCount: 6,
-      experimentCount: 18,
-      deploymentCount: 2,
-      lastActivity: '3 hours ago',
-      createdAt: '2024-01-20',
-      isPersonal: true
-    },
-    {
-      id: 5,
-      name: 'NLP Sentiment Analysis',
-      description: 'Natural language processing for social media sentiment',
-      status: 'archived',
-      memberCount: 4,
-      members: [
-        { id: 1, name: 'John Doe', avatar: 'JD' },
-        { id: 2, name: 'Sarah Chen', avatar: 'SC' },
-        { id: 3, name: 'Mike Johnson', avatar: 'MJ' },
-        { id: 4, name: 'Emily Davis', avatar: 'ED' },
-      ],
-      modelCount: 3,
-      experimentCount: 12,
+      memberCount: 0,
+      members: [],
+      modelCount: 0,
+      experimentCount: 0,
       deploymentCount: 0,
-      lastActivity: '2 months ago',
-      createdAt: '2023-11-15',
-      isPersonal: false
-    },
-    {
-      id: 6,
-      name: 'Time Series Forecasting',
-      description: 'Predictive models for sales and demand forecasting',
-      status: 'active',
-      memberCount: 3,
-      members: [
-        { id: 1, name: 'Lisa Wang', avatar: 'LW' },
-        { id: 2, name: 'Tom Wilson', avatar: 'TW' },
-        { id: 3, name: 'Alex Kim', avatar: 'AK' },
-      ],
-      modelCount: 7,
-      experimentCount: 28,
-      deploymentCount: 4,
-      lastActivity: '5 hours ago',
-      createdAt: '2024-01-12',
-      isPersonal: false
-    }
-  ];
+      lastActivity: new Date(p.updatedAt || p.createdAt).toLocaleString(),
+      createdAt: p.createdAt,
+      isPersonal: false,
+    }));
+  }, [items]);
 
   // Filter and sort projects
   const filteredProjects = projects
@@ -311,7 +240,9 @@ function ProjectsContent() {
         </div>
 
         {/* Projects Grid */}
-        {filteredProjects.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-gray-600">Loading projects...</div>
+        ) : filteredProjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProjects.map((project) => (
               <Card key={project.id} className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
@@ -453,18 +384,14 @@ function ProjectsContent() {
         )}
 
         {/* Pagination */}
-        {filteredProjects.length > 12 && (
+        {total > pageSize && (
           <div className="flex items-center justify-between pt-6 border-t">
             <div className="text-sm text-gray-600">
-              Showing {Math.min(12, filteredProjects.length)} of {filteredProjects.length} projects
+              Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                Next
-              </Button>
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
+              <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / pageSize)} onClick={() => setPage((p) => p + 1)}>Next</Button>
             </div>
           </div>
         )}
