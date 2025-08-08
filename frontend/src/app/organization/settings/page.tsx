@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/contexts/auth-context';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import OrganizationSettingsView from '@/components/organization/settings-view';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -600,7 +601,7 @@ function OrganizationSettingsContent() {
 export default function OrganizationSettingsPage() {
   return (
     <ProtectedRoute requiredRole="viewer">
-      <OrganizationSettingsContent />
+      <OrganizationSettingsView />
     </ProtectedRoute>
   );
 }
