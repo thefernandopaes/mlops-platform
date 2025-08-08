@@ -36,6 +36,8 @@ import {
   Cpu,
   Play
 } from 'lucide-react';
+import modelService, { ModelCreateRequest, ModelVersionCreateRequest } from '@/lib/model-service';
+import { useAuth } from '@/contexts/auth-context';
 
 interface ModelUploadForm {
   // Step 1 - Basic Information
@@ -106,6 +108,7 @@ const initialForm: ModelUploadForm = {
 
 function ModelUploadContent() {
   const router = useRouter();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [form, setForm] = useState<ModelUploadForm>(initialForm);
   const [isDraft, setIsDraft] = useState(false);
@@ -239,9 +242,48 @@ function ModelUploadContent() {
 
   const handleSubmit = async () => {
     if (validateStep(currentStep)) {
-      // API call to register model
-      console.log('Registering model...', form);
-      router.push('/dashboard/models');
+      if (!user?.organizationId) return;
+      try {
+        // Create model
+        const modelPayload: ModelCreateRequest = {
+          organization_id: user.organizationId,
+          project_id: form.projectId,
+          name: form.name,
+          description: form.description || undefined,
+          model_type: form.category || form.modelType || 'classification',
+          framework: form.framework || 'scikit-learn',
+          task_type: undefined,
+          tags: form.tags,
+          model_metadata: {
+            training: form.trainingDetails,
+            requirements: form.requirements,
+          },
+        };
+        const created = await modelService.create(modelPayload);
+
+        // Create initial version with placeholder path
+        const versionPayload: ModelVersionCreateRequest = {
+          version: form.version || '1.0.0',
+          stage: (form.stage as any) || 'development',
+          model_file_path: `/placeholder/${created.id}/${form.name.replace(/\s+/g, '-').toLowerCase()}.bin`,
+          model_size_bytes: form.file?.size,
+          requirements: form.requirements || undefined,
+          performance_metrics: form.metrics,
+          training_metrics: {},
+          model_schema: {
+            input: form.inputSchema || undefined,
+            output: form.outputSchema || undefined,
+            example_input: form.exampleInput || undefined,
+            example_output: form.exampleOutput || undefined,
+          } as any,
+          description: undefined,
+        };
+        await modelService.createVersion(created.id, versionPayload);
+
+        router.push('/dashboard/models');
+      } catch (e) {
+        console.error('Failed to register model', e);
+      }
     }
   };
 

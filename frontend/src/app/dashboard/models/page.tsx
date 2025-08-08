@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import { Button } from '@/components/ui/button';
@@ -43,13 +43,21 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Model, ModelFilters, ModelSort, ModelViewMode } from '@/types/model';
+import modelService from '@/lib/model-service';
+import { useAuth } from '@/contexts/auth-context';
 
 function ModelsContent() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ModelViewMode>('grid');
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(true);
   const [sortBy, setSortBy] = useState<ModelSort>({ field: 'updated', direction: 'desc' });
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(12);
+  const [total, setTotal] = useState(0);
+  const [items, setItems] = useState<any[]>([]);
   
   const [filters, setFilters] = useState<ModelFilters>({
     search: '',
@@ -70,8 +78,51 @@ function ModelsContent() {
     href: '/dashboard/models/upload'
   };
 
-  // Mock data for models
-  const models: Model[] = [
+  useEffect(() => {
+    const run = async () => {
+      if (!user?.organizationId) return;
+      setLoading(true);
+      try {
+        const res = await modelService.list(
+          user.organizationId,
+          undefined,
+          (page - 1) * pageSize,
+          pageSize
+        );
+        setItems(res.models);
+        setTotal(res.total);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, [user?.organizationId, page, pageSize]);
+
+  const models: Model[] = useMemo(() => {
+    return items.map((m) => ({
+      id: m.id,
+      name: m.name,
+      description: m.description || '',
+      version: '1.0.0',
+      framework: (m.framework as any) || 'scikit-learn',
+      modelType: (m.model_type as any) || 'classification',
+      stage: 'development',
+      projectId: m.project_id,
+      projectName: '',
+      tags: m.tags || [],
+      metrics: {},
+      fileSize: 0,
+      filePath: '',
+      createdBy: { id: m.created_by, name: '' },
+      updatedBy: { id: m.created_by, name: '' },
+      createdAt: m.created_at,
+      updatedAt: m.updated_at,
+      deploymentCount: 0,
+      downloadCount: 0,
+      isFavorite: false,
+      isPublic: false,
+    }));
+  }, [items]);
     {
       id: '1',
       name: 'Fraud Detection v2.1',
@@ -596,7 +647,9 @@ function ModelsContent() {
             )}
 
             {/* Models Grid/Table */}
-            {viewMode === 'grid' ? (
+            {loading ? (
+              <div className="text-center py-12 text-gray-600">Loading models...</div>
+            ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredModels.map((model) => {
                   const mainMetric = getMainMetric(model);
@@ -878,18 +931,12 @@ function ModelsContent() {
             )}
 
             {/* Pagination */}
-            {filteredModels.length > 24 && (
+            {total > pageSize && (
               <div className="flex items-center justify-between pt-6 border-t">
-                <div className="text-sm text-gray-600">
-                  Showing {Math.min(24, filteredModels.length)} of {filteredModels.length} models
-                </div>
+                <div className="text-sm text-gray-600">Page {page} of {Math.max(1, Math.ceil(total / pageSize))}</div>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled>
-                    Next
-                  </Button>
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
+                  <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / pageSize)} onClick={() => setPage((p) => p + 1)}>Next</Button>
                 </div>
               </div>
             )}
