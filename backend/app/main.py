@@ -1,8 +1,12 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth, organizations, projects, models, experiments, deployments
 from app.core.config import settings
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+from sqlalchemy import text
+from app.core.database import SessionLocal
+import redis as redis_lib
 import time
 import logging
 import json
@@ -16,7 +20,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=settings.ALLOWED_HOSTS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,6 +33,10 @@ app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"]
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(experiments.router, prefix="/api/v1/experiments", tags=["experiments"])
 app.include_router(deployments.router, prefix="/api/v1/deployments", tags=["deployments"])
+
+# Configure logging level from settings
+for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+    logging.getLogger(logger_name).setLevel(getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
@@ -58,21 +66,53 @@ async def metrics_middleware(request: Request, call_next):
     return response
 
 @app.get("/metrics")
-async def metrics():
-    return app.responses.Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+async def metrics(request: Request):
+    # Optional protection via METRICS_TOKEN header when configured
+    metrics_token = settings.METRICS_TOKEN.strip() if settings.METRICS_TOKEN else ""
+    if metrics_token:
+        provided = request.headers.get("x-metrics-token", "")
+        if provided != metrics_token:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+@app.get("/ready")
+async def readiness_probe():
+    # Check DB connectivity
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return {"ready": False, "dependencies": {"database": False, "redis": None}}
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+
+    # Check Redis connectivity (optional)
+    redis_ok = None
+    try:
+        if settings.REDIS_URL:
+            client = redis_lib.from_url(settings.REDIS_URL, decode_responses=True)
+            redis_ok = client.ping()
+    except Exception:
+        redis_ok = False
+
+    return {"ready": True, "dependencies": {"database": True, "redis": redis_ok}}
 
 # Structured logging
-logger = logging.getLogger("uvicorn.access")
+root_logger = logging.getLogger()
 handler = logging.StreamHandler()
 formatter = logging.Formatter(json.dumps({
     "time": "%(asctime)s",
     "level": "%(levelname)s",
+    "logger": "%(name)s",
     "message": "%(message)s"
 }))
 handler.setFormatter(formatter)
-if not logger.handlers:
-    logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+if not root_logger.handlers:
+    root_logger.addHandler(handler)
+root_logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
 
 @app.get("/")
 async def root():

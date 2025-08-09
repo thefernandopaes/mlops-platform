@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "MLOps Platform"
     DEBUG: bool = False
     VERSION: str = "1.0.0"
+    LOG_LEVEL: str = "INFO"
     
     # Database
     DATABASE_URL: str = "postgresql://mlops_user:mlops_password@localhost:5432/mlops_db"
@@ -19,6 +20,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    METRICS_TOKEN: str = ""
     
     # CORS
     ALLOWED_HOSTS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
