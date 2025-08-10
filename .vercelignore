@@ -4,7 +4,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Backend files (não necessários para o frontend)
+# Backend files 
 backend/
 docker-compose.yml
 Dockerfile
@@ -21,7 +21,7 @@ Dockerfile
 *.swp
 *.swo
 
-# OS files
+# files
 .DS_Store
 Thumbs.db
 
@@ -29,11 +29,11 @@ Thumbs.db
 logs
 *.log
 
-# Documentation (opcional, remova se quiser incluir)
+# Documentation
 docs/
 README.md
 
-# Assets não essenciais
+# Assets 
 attached_assets/
 
 # Cache
