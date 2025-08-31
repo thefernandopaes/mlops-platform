@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, organizations, projects, models, experiments, deployments
+from app.api.v1 import auth, organizations, projects, models, experiments, deployments, api_keys, inference
 from app.core.config import settings
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
@@ -33,6 +33,8 @@ app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"]
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(experiments.router, prefix="/api/v1/experiments", tags=["experiments"])
 app.include_router(deployments.router, prefix="/api/v1/deployments", tags=["deployments"])
+app.include_router(api_keys.router, prefix="/api/v1", tags=["api-keys"])
+app.include_router(inference.router, prefix="/api/v1", tags=["inference"])
 
 # Configure logging level from settings
 for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):

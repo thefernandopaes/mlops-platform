@@ -11,8 +11,12 @@ RUN npm ci
 # Copy application code
 COPY . .
 
+# Build application
+RUN npm run build
+
 # Expose port
 EXPOSE 3000
 
-# Command to run the application
-CMD ["npm", "run", "dev"]
+# Command to run the application in production
+ENV PORT=3000
+CMD ["npm", "run", "start"]

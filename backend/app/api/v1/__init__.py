@@ -1,5 +1,5 @@
 # API v1 modules
-from . import auth, organizations, projects, models, experiments, deployments
+from . import auth, organizations, projects, models, experiments, deployments, api_keys, inference
 
 __all__ = [
     "auth",
@@ -7,5 +7,7 @@ __all__ = [
     "projects",
     "models",
     "experiments",
-    "deployments"
+    "deployments",
+    "api_keys",
+    "inference"
 ]
